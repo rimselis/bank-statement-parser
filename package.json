@@ -1,0 +1,18 @@
+{
+  "name": "bank-statement-parser",
+  "version": "0.0.1",
+  "description": "SEB bank statement parser for ledger",
+  "main": "parser.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "seb",
+    "bank",
+    "parser",
+    "ledger",
+    "txnx"
+  ],
+  "author": "Martynas Rimšelis",
+  "license": "MIT"
+}
