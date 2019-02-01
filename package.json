@@ -4,6 +4,7 @@
   "description": "SEB bank statement parser for ledger",
   "main": "parser.js",
   "scripts": {
+    "start": "nodemon parser.js SEB_EXPORT_DEV_0001.xml",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -14,5 +15,11 @@
     "txnx"
   ],
   "author": "Martynas Rimšelis",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "nodemon": "^1.18.9"
+  },
+  "dependencies": {
+    "xml2js": "^0.4.19"
+  }
 }
