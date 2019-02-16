@@ -64,3 +64,4 @@ typings/
 
 # Project specific
 *.xml
+*.json
