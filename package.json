@@ -2,7 +2,7 @@
   "name": "bank-statement-parser",
   "version": "0.0.1",
   "description": "SEB bank statement parser for ledger",
-  "main": "parser.js",
+  "main": "main.js",
   "scripts": {
     "start": "nodemon parser.js SEB_EXPORT_DEV_0001.xml",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -17,7 +17,8 @@
   "author": "Martynas Rimšelis",
   "license": "MIT",
   "devDependencies": {
-    "nodemon": "^1.18.9"
+    "nodemon": "^1.18.9",
+    "semistandard": "^13.0.1"
   },
   "dependencies": {
     "xml2js": "^0.4.19"
