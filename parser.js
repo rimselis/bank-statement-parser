@@ -1,31 +1,27 @@
 const fs = require('fs');
-const xmlParser = require('xml2js').Parser({
-  attrkey: 'elementAttributes',
-  charkey: 'elementValue',
-});
+const util = require('util');
+const xml2js = require('xml2js');
 
-const xmlFile = process.argv[2];
-if (!xmlFile) {
-  console.log('Please provide XML file as first argument.');
-  process.exit(0);
-}
-
-fs.readFile(xmlFile, function (err, data) {
-  if (err) {
-    console.log('File could not be opened');
-    process.exit(0);
+exports.extractTransactions = (xmlFile, tnxExpression) => {
+  if (!xmlFile) {
+    return new Error('Please provide XML file as first argument.');
   }
 
-  xmlParser.parseString(data, extractData);
-});
+  return new Promise((resolve, reject) => {
+    fs.readFile(xmlFile, function (err, xmlString) {
+      if (err) {
+        reject(err);
+      }
 
-function extractData(err, data) {
+      const parserOptions = { attrkey: 'elementAttributes', charkey: 'elementValue' };
+      util.promisify(xml2js.parseString)(xmlString, parserOptions)
+        .then(data => resolve(extractDataFromXMLObject(data, tnxExpression)))
+        .catch(err => reject(err));
+    });
+  });
+};
 
-  if (err) {
-    console.log('XML could not be parsed');
-    process.exit(0);
-  }
-  
+function extractDataFromXMLObject (data, tnxExpression) {
   const rootElement = data.Document.BkToCstmrStmt[0];
 
   console.log(`\nParsing bank statement generated: ${rootElement.GrpHdr[0].CreDtTm}\n`);
@@ -41,33 +37,40 @@ function extractData(err, data) {
     process.exit(0);
   }
 
-  const transactions = parseTransactions(statement);
+  const transactions = parseTransactions(statement, tnxExpression);
 
-  transactions.map(tx => {
-    console.log(tx);
-  });
+  return transactions;
 }
 
-function parseTransactions(statement) {
-
+function parseTransactions (statement, tnxExpression) {
   // filtering in CREDIT transaction only as we want to get the incoming amounts only
-  const entries = statement.Ntry.filter(entry => entry.CdtDbtInd[0] === 'CRDT');
+  const entries = statement.Ntry.filter(entry => {
+    const matchReferenceRegex = tnxExpression
+      ? tnxExpression.test(entry.NtryDtls[0].TxDtls[0].RmtInf[0].Ustrd[0])
+      : true;
+    return entry.CdtDbtInd[0] === 'CRDT' && matchReferenceRegex;
+  });
 
   const processedTransactions = entries.map(entry => {
-
     const transactionAmount = +entry.Amt[0].elementValue;
     const transactionCurrency = entry.Amt[0].elementAttributes.Ccy;
     const transactionReference = entry.NtryDtls[0].TxDtls[0].RmtInf[0].Ustrd[0];
+    const transactionReferenceParts = tnxExpression.exec(transactionReference);
     const transactionId = entry.NtryDtls[0].TxDtls[0].Refs[0].TxId[0];
-    const transactionDateTime = new Date(entry.BookgDt[0].DtTm[0]);
+    const transactionDateTime = entry.BookgDt[0].DtTm[0];
+    const transactionUnixDateTime = new Date(transactionDateTime).getTime();
 
-    return {
+    const transaction = {
       dateTime: transactionDateTime,
-      id: transactionId,
+      unixDateTime: transactionUnixDateTime,
+      tnxId: transactionId,
       reference: transactionReference,
+      referenceMatch: transactionReferenceParts,
       amount: transactionAmount,
-      currency: transactionCurrency, 
+      currency: transactionCurrency
     };
+
+    return transaction;
   });
 
   return processedTransactions;
