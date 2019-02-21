@@ -1,4 +1,5 @@
 const { extractTransactions } = require('./parser');
+const { writeToCsv } = require('./csv-writer');
 // const { extractSubscriptions } = require('./subscriptions');
 
 Promise.all([
@@ -13,4 +14,5 @@ Promise.all([
       : transactions;
 
     unprocessedPayments.map(tnx => console.log(tnx));
+    writeToCsv(`${new Date().getTime()}.csv`, unprocessedPayments).then(() => console.log('success'));
   });
